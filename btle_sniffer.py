@@ -179,7 +179,7 @@ class BtleSniffer:
                         [sg.Checkbox("Don't show infrequent addrs", default=True, font=("Courier", 10), key="-Infrequent-")],
                         [sg.Checkbox("Show data points", default=False, font=("Courier", 10), key="-ShowDataPoints-")],
                         [sg.Checkbox("Pause plot updates", default=False, font=("Courier", 10), key="-PausePlot-")],
-                        [sg.Button('OK'), sg.Button('Refresh Addr List')] ]
+                        [sg.Button('OK'), sg.Button('Refresh Addr List'), sg.Button('Clear Data')] ]
 
             # Create the Window
             window = sg.Window('RSSI Filter', layout, resizable=True, finalize=True)
