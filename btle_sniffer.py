@@ -45,7 +45,35 @@ class BtleSniffer:
         self.plotMarker = ""
         self.hideInfrequent = True
         self.infrequentThresh = 10
+
+        # call init function for RaspPi
+        self.initPiSniffer()
     
+    def sendPiSnifferCmd(self, _cmdStr):
+        # ssh command to stream a pacapng file over ssh from the rasp pi to the 
+        # local machine and then use tshark to dissect the packets
+        cmd =  ["ssh", "ubuntu@pi_sniffer", _cmdStr]
+
+        # open the process and save the process object as a class member variable
+        process = subprocess.Popen(cmd, 
+                           stdout=subprocess.PIPE,
+                           universal_newlines=True)
+
+        # monitor the process and wait for exit
+        while True:
+            output = process.stdout.readline()
+
+            # wait for process to exit
+            return_code = process.poll()
+            if return_code is not None:
+                print(output)
+                print('RETURN CODE', return_code)
+                break
+    
+    def initPiSniffer(self):
+        self.sendPiSnifferCmd("sudo systemctl stop bluetooth")
+        self.sendPiSnifferCmd("sudo ifconfig wlan0 down")
+
     # wait for main process to exit, if it is running
     def wait(self):
         if self.mainProcess is not None:
