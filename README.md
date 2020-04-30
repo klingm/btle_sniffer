@@ -11,4 +11,5 @@ The user interface is shown below.
 The output file format is:
 
 Timestamp, Channel, Src Addr, Adv Addr, RSSI
+
 ![btle_sniffer GUI](readme/tshark.out.png)
