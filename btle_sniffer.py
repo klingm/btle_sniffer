@@ -22,9 +22,6 @@ from matplotlib.backends.backend_tkagg import (NavigationToolbar2Tk as Navigatio
 
 from datetime import datetime
 import time
-s = "16/08/2013 09:51:43"
-d = datetime.strptime(s, "%d/%m/%Y %H:%M:%S")
-time.mktime(d.timetuple())
 
 matplotlib.use('TkAgg')
 
