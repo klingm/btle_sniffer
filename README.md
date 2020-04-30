@@ -3,7 +3,7 @@ This program requires a RaspPi 4 and a nRF52-DK with installed Bluetooth LE Snif
 
 [RaspPi 4 Ubuntu 18.04 BTLE Sniffer Image](https://drive.google.com/open?id=1eDnt5EfSa-9hmARvvnyXr8WYlHLQDVVJ)
 
-Follow the steps [here](https://www.raspberrypi.org/documentation/installation/installing-images/) to write the image to a bootable SD card.
+Follow the steps [here](https://www.raspberrypi.org/documentation/installation/installing-images/) to write the image to a bootable SD card.  This image is preconfigured to work with this program.  The static ip address is set to 192.168.152.62 and requires a hard-wired connection to the same LAN that the controlling PC is connected to.
 
 The RaspPi 4 4GB model can be purchased [here](https://www.digikey.com/product-detail/en/raspberry-pi/RASPBERRY-PI-4B-4GB/1690-RASPBERRYPI4B-4GB-ND/10258781).
 
