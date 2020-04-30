@@ -130,10 +130,10 @@ class BtleSniffer:
             yMax = window.winfo_screenheight()/100
             xMax = window.winfo_screenwidth()/100
 
-            if(xMax > 18.8):
-                xMax = 18.5
-            if(yMax > 8):
-                yMax = 8
+            if(xMax > 18.0):
+                xMax = 18.0
+            if(yMax > 7.5):
+                yMax = 7.5
 
             # generate the figure
             self.fig = pyplot.figure(figsize=(xMax, yMax))
