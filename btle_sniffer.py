@@ -9,6 +9,7 @@ import sys
 import os
 import time
 import math
+import statistics
 import getopt
 import logging
 import subprocess
@@ -18,6 +19,12 @@ import readline
 import PySimpleGUI as sg
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends.backend_tkagg import (NavigationToolbar2Tk as NavigationToolbar)
+
+from datetime import datetime
+import time
+s = "16/08/2013 09:51:43"
+d = datetime.strptime(s, "%d/%m/%Y %H:%M:%S")
+time.mktime(d.timetuple())
 
 matplotlib.use('TkAgg')
 
@@ -32,6 +39,8 @@ class BtleSniffer:
 
         self.fig = None
         self.ax1 = None
+        self.ax2 = None
+        self.ax3 = None
         self.ani = None
         self.window = None
         self.figCanvasAgg = None
@@ -45,6 +54,15 @@ class BtleSniffer:
         self.plotMarker = ""
         self.hideInfrequent = True
         self.infrequentThresh = 10
+
+        # stats
+        self._min = [0,0,0]
+        self._max = [0,0,0]
+        self._mean = [0,0,0]
+        self._median = [0,0,0]
+        self._mode = [0,0,0]
+        self._std = [0,0,0]
+        self._range = [0,0,0]
 
         # call init function for RaspPi
         self.initPiSniffer()
@@ -107,28 +125,40 @@ class BtleSniffer:
             yMax = window.winfo_screenheight()/100
             xMax = window.winfo_screenwidth()/100
 
-            if(xMax > 19):
-                xMax = 19
+            if(xMax > 18.8):
+                xMax = 18.5
             if(yMax > 8):
                 yMax = 8
 
             # generate the figure
             self.fig = pyplot.figure(figsize=(xMax, yMax))
-            self.ax1 = self.fig.add_subplot(1,1,1)
+            self.ax1 = self.fig.add_subplot(3,1,1)
             self.ax1.set_xlabel("Time (s)")
             self.ax1.set_ylabel("RSSI (dB)")
-            self.ax1.set_title("All BTLE Devices")
+            self.ax1.set_title("Ch 37 All BTLE Devices")
+
+            self.ax2 = self.fig.add_subplot(3,1,2)
+            self.ax2.set_xlabel("Time (s)")
+            self.ax2.set_ylabel("RSSI (dB)")
+            self.ax2.set_title("Ch 38 All BTLE Devices")
+            
+            self.ax3 = self.fig.add_subplot(3,1,3)
+            self.ax3.set_xlabel("Time (s)")
+            self.ax3.set_ylabel("RSSI (dB)")
+            self.ax3.set_title("Ch 39 All BTLE Devices")
             self.fig.tight_layout()
 
-            #self.ani = animation.FuncAnimation(self.fig, self.animatePlot, interval=1000)
-            #pyplot.show(block=False)
-
-    def animatePlot(self, i):
+    # This function must be called periodically to read new data and plot it.
+    def animatePlot(self, i, window):
         # open the file containing data to plot and read.  Data is stored as 
         # CSV so split before using.
         lines = open('tshark.out','r').readlines()
-        xs = []
-        ys = []
+        xs1 = []
+        ys1 = []
+        xs2 = []
+        ys2 = []
+        xs3 = []
+        ys3 = []
 
         # field indexes for BLTE data
         BTLE_TIME = 0
@@ -147,6 +177,7 @@ class BtleSniffer:
         # loop over all data read
         num = 0
         rssiCounts = dict({"*":"*"})
+        t0 = 0
         for line in lines:
             line = line.rstrip()
             # FIXME - skip the first line, it is garbage
@@ -159,28 +190,121 @@ class BtleSniffer:
             if len(line) > 1:
                 data = line.split(',')
                 if len(data) == 5:
+                    # convert timestamp to seconds since start of capture
+                    s = data[BTLE_TIME]
+                    d = datetime.strptime(s, "%Y-%m-%d %H:%M:%S.%f")
+                    t = time.mktime(d.timetuple())
+                    
+                    # get the first timestamp to use in calculating the display
+                    # time (seconds since start of capture)
+                    if num == 2:
+                        t0 = t
+
                     # count the number of RSSI samples for this address
                     if data[BTLE_ADV_ADDR] in rssiCounts:
                         rssiCounts[data[BTLE_ADV_ADDR]] = rssiCounts[data[BTLE_ADV_ADDR]] + 1 
                     else:
                         rssiCounts[data[BTLE_ADV_ADDR]] = 1
 
+                    # check if this address is the selected one (or none means show all)
                     if (data[BTLE_ADV_ADDR].lower() == self.filter.lower()) or self.filter == "":
-                        xs.append(float(data[BTLE_TIME]))
-                        ys.append(float(data[BTLE_RSSI]))
+                        # separate the data by channel (37, 38 or 39)
+                        if data[BTLE_CH] == "37":
+                            xs1.append(float(t-t0))
+                            ys1.append(float(data[BTLE_RSSI]))
+                        if data[BTLE_CH] == "38":
+                            xs2.append(float(t-t0))
+                            ys2.append(float(data[BTLE_RSSI]))
+                        if data[BTLE_CH] == "39":
+                            xs3.append(float(t-t0))
+                            ys3.append(float(data[BTLE_RSSI]))
+
                 else:
                     print("ERROR: unexpected data length ", len(data), " ", num)
 
         # update the plot
         if pyplot.fignum_exists(self.fig.number) and not self.pausePlot:
             self.ax1.clear()
-            self.ax1.set_title(title)
+            self.ax1.set_title("Ch 37 " + title)
             self.ax1.set_xlabel("Time (s)")
             self.ax1.set_ylabel("RSSI (dB)")
-            self.ax1.plot(xs, ys, linewidth=1, marker=self.plotMarker)
+            self.ax1.plot(xs1, ys1, linewidth=1, marker=self.plotMarker)
+            self.ax2.clear()
+            self.ax2.set_title("Ch 38 " + title)
+            self.ax2.set_xlabel("Time (s)")
+            self.ax2.set_ylabel("RSSI (dB)")
+            self.ax2.plot(xs2, ys2, linewidth=1, marker=self.plotMarker)
+            self.ax3.clear()
+            self.ax3.set_title("Ch 39 " + title)
+            self.ax3.set_xlabel("Time (s)")
+            self.ax3.set_ylabel("RSSI (dB)")
+            self.ax3.plot(xs3, ys3, linewidth=1, marker=self.plotMarker)
+
+            self.updateStats(window, ys1,ys2,ys3)
         
         # update the class var that holds all RSSI counters
         self.rssiCounts = rssiCounts
+
+    def updateStats(self, window, rssi1, rssi2, rssi3):
+        if not rssi1 or not rssi2 or not rssi3:
+            print("RSSI not received yet!")
+            return
+
+        self._min1 = min(rssi1) 
+        self._min2 = min(rssi2) 
+        self._min3 = min(rssi3) 
+
+        self._max1 = max(rssi1) 
+        self._max2 = max(rssi2) 
+        self._max3 = max(rssi3) 
+
+        self._mean1 = statistics.mean(rssi1) 
+        self._mean2 = statistics.mean(rssi2) 
+        self._mean3 = statistics.mean(rssi3) 
+
+        self._median1 = statistics.median(rssi1) 
+        self._median2 = statistics.median(rssi2) 
+        self._median3 = statistics.median(rssi3) 
+
+        self._mode1 = (max(set(rssi1), key=rssi1.count)) 
+        self._mode2 = (max(set(rssi2), key=rssi2.count)) 
+        self._mode3 = (max(set(rssi3), key=rssi3.count)) 
+
+        self._std1 = statistics.stdev(rssi1) 
+        self._std2 = statistics.stdev(rssi2) 
+        self._std3 = statistics.stdev(rssi3) 
+
+        self._range1 = self._max1 - self._min1 
+        self._range2 = self._max2 - self._min2 
+        self._range3 = self._max3 - self._min3 
+
+        window["-Min1-"].update(str(self._min1))
+        window["-Min2-"].update(str(self._min2))
+        window["-Min3-"].update(str(self._min3))
+
+        window["-Max1-"].update(str(self._max1))
+        window["-Max2-"].update(str(self._max2))
+        window["-Max3-"].update(str(self._max3))
+
+        window["-Mean1-"].update('{:3.6f}'.format(self._mean1))
+        window["-Mean2-"].update('{:3.6f}'.format(self._mean2))
+        window["-Mean3-"].update('{:3.6f}'.format(self._mean3))
+
+        window["-Median1-"].update(str(self._median1))
+        window["-Median2-"].update(str(self._median2))
+        window["-Median3-"].update(str(self._median3))
+
+        window["-Mode1-"].update(str(self._mode1))
+        window["-Mode2-"].update(str(self._mode2))
+        window["-Mode3-"].update(str(self._mode3))
+
+        window["-Std1-"].update('{:3.6f}'.format(self._std1))
+        window["-Std2-"].update('{:3.6f}'.format(self._std2))
+        window["-Std3-"].update('{:3.6f}'.format(self._std3))
+
+        window["-Rng1-"].update(str(self._range1))
+        window["-Rng2-"].update(str(self._range2))
+        window["-Rng3-"].update(str(self._range3))
 
     def getAddrList(self):
         addrs = list()
@@ -200,15 +324,29 @@ class BtleSniffer:
             sg.theme('Reddit')	# Add a touch of color
             # All the stuff inside your window.
             figX, figY, figW, figH = self.fig.bbox.bounds
-            layout = [  [sg.Canvas(size=(figW, figH), key="canvas")], 
-                        [sg.Text('RSSI Filter', font=("Courier", 10))],
+
+            #col1 = [  [sg.Canvas(size=(figW, figH), key="canvas")], 
+            col1 = [ [sg.Text('RSSI Filter', font=("Courier", 10)), sg.Text('')],
                         [sg.Text('Select advertising addr: ', font=("Courier", 10)), 
                          sg.Combo(self.getAddrList(), auto_size_text=True, key="-ComboList-", font=("Courier",10))],
                         [sg.Checkbox("Don't show infrequent addrs", default=True, font=("Courier", 10), key="-Infrequent-")],
                         [sg.Checkbox("Show data points", default=False, font=("Courier", 10), key="-ShowDataPoints-")],
                         [sg.Checkbox("Pause plot updates", default=False, font=("Courier", 10), key="-PausePlot-")],
-                        [sg.Button('OK'), sg.Button('Refresh Addr List'), sg.Button('Clear Data')] ]
+                        [sg.Button('OK'), sg.Button('Refresh Addr List')] ]
+            
+            col2 = [ [sg.Text('   Stats ', size=(10,1), font=("Courier",10)), sg.Text('Ch 37', size=(10,1), font=("Courier",10)), sg.Text('Ch 38', size=(10,1), font=("Courier",10)), sg.Text('Ch 39', size=(10,1), font=("Courier",10))],
+                    [sg.Text('    Min   ', size=(10,1), font=("Courier",10)), sg.Text(str(self._min[0]), key="-Min1-", size=(10,1), font=("Courier",10)), sg.Text(str(self._min[1]), key="-Min2-", size=(10,1), font=("Courier",10)), sg.Text(str(self._min[2]), key="-Min3-", size=(10,1), font=("Courier",10))],
+                    [sg.Text('    Max   ', size=(10,1), font=("Courier",10)), sg.Text(str(self._max[0]), key="-Max1-", size=(10,1), font=("Courier",10)), sg.Text(str(self._max[1]), key="-Max2-", size=(10,1), font=("Courier",10)), sg.Text(str(self._max[2]), key="-Max3-", size=(10,1), font=("Courier",10))],
+                    [sg.Text('    Mean  ', size=(10,1), font=("Courier",10)), sg.Text(str(self._mean[0]), key="-Mean1-", size=(10,1), font=("Courier",10)), sg.Text(str(self._mean[1]), key="-Mean2-", size=(10,1), font=("Courier",10)), sg.Text(str(self._mean[2]), key="-Mean3-", size=(10,1), font=("Courier",10))],
+                    [sg.Text('    Median', size=(10,1), font=("Courier",10)), sg.Text(str(self._median[0]), key="-Median1-", size=(10,1), font=("Courier",10)), sg.Text(str(self._median[1]), key="-Median2-", size=(10,1), font=("Courier",10)), sg.Text(str(self._median[2]), key="-Median3-", size=(10,1), font=("Courier",10))],
+                    [sg.Text('    Mode  ', size=(10,1), font=("Courier",10)), sg.Text(str(self._mode[0]), key="-Mode1-", size=(10,1), font=("Courier",10)), sg.Text(str(self._mode[1]), key="-Mode2-", size=(10,1), font=("Courier",10)), sg.Text(str(self._mode[2]), key="-Mode3-", size=(10,1), font=("Courier",10))],
+                    [sg.Text('    Std   ', size=(10,1), font=("Courier",10)), sg.Text(str(self._std[0]), key="-Std1-", size=(10,1), font=("Courier",10)), sg.Text(str(self._std[1]), key="-Std2-", size=(10,1), font=("Courier",10)), sg.Text(str(self._std[2]), key="-Std3-", size=(10,1), font=("Courier",10))],
+                    [sg.Text('    Rng   ', size=(10,1), font=("Courier",10)), sg.Text(str(self._range[0]), key="-Rng1-", size=(10,1), font=("Courier",10)), sg.Text(str(self._range[1]), key="-Rng2-", size=(10,1), font=("Courier",10)), sg.Text(str(self._range[2]), key="-Rng3-", size=(10,1), font=("Courier",10))]
+                  ]
 
+            layout = [  [sg.Canvas(size=(figW, figH), key="canvas")], 
+                        [sg.Column(col1), sg.Column(col2)]]
+            
             # Create the Window
             window = sg.Window('RSSI Filter', layout, resizable=True, finalize=True)
             self.window = window
@@ -219,7 +357,7 @@ class BtleSniffer:
             # Event Loop to process "events" and get the "values" of the inputs
             done = False
             while not done:
-                event, values = window.read(timeout=1000, timeout_key="-Timeout-")
+                event, values = window.read(timeout=500, timeout_key="-Timeout-")
                 if event in (None, "Exit"):
                     print("Exiting window")
                     done = True
@@ -257,7 +395,7 @@ class BtleSniffer:
                         print("runFlag set to False, exiting...")
                         done = True
                     else:
-                        self.animatePlot(0)
+                        self.animatePlot(0, window)
                         self.figCanvasAgg = self.masterPlotWindow(window['canvas'].TKCanvas, self.fig, update=True)
                 else:
                     print("Unknown event: ", event)
@@ -343,7 +481,7 @@ class BtleSniffer:
         cmd2 = ["tshark", "-r", "-", "-T", "fields", "-E", "separator=,", 
                 "-e", "_ws.col.Time", "-e", "nordic_ble.channel", 
                 "-e", "btle.scanning_address", "-e", "btle.advertising_address", 
-                "-e", "nordic_ble.rssi"]
+                "-e", "nordic_ble.rssi", "-t", "ad"]
                 
 
         # open the process and save the process object as a class member variable
