@@ -25,8 +25,10 @@ import time
 
 matplotlib.use('TkAgg')
 
+# Class that implements all BTLE sniffer functionality.  Create and update GUI,
+# send commands to RaspPi, receive data stream and process it.
 class BtleSniffer:
-    # Constructor
+    # Constructor, init all class vars and call init routine for the PiSniffer
     def __init__(self, _filter = ""):
         print("init")
         self.mainProcess = None
@@ -64,6 +66,9 @@ class BtleSniffer:
         # call init function for RaspPi
         self.initPiSniffer()
     
+    # Generic routine to send a command to the RaspPi.  Only for use with 
+    # commands that return and don'thang until killed.  This is used to send 
+    # init commands.  Command is specified in _cmdStr arg.
     def sendPiSnifferCmd(self, _cmdStr):
         # ssh command to stream a pacapng file over ssh from the rasp pi to the 
         # local machine and then use tshark to dissect the packets
@@ -85,6 +90,8 @@ class BtleSniffer:
                 print('RETURN CODE', return_code)
                 break
     
+    # Initialization routine for setting up the RaspPi.  This turns off 
+    # bluetooth and shuts off WiFi to allow for clean data collections.
     def initPiSniffer(self):
         self.sendPiSnifferCmd("sudo systemctl stop bluetooth")
         self.sendPiSnifferCmd("sudo ifconfig wlan0 down")
@@ -96,6 +103,7 @@ class BtleSniffer:
         else:
             print("main process not running!")
 
+    # Creates the master window used for holding the plot and the UI controls.
     def masterPlotWindow(self, canvas, figure, update=False):
         if not update:
             figureCanvasAgg = FigureCanvasTkAgg(figure, canvas)
@@ -219,7 +227,7 @@ class BtleSniffer:
                 else:
                     print("ERROR: unexpected data length ", len(data), " ", num)
 
-        # update the plot
+        # update the plot (3 subplots)
         if pyplot.fignum_exists(self.fig.number) and not self.pausePlot:
             self.ax1.clear()
             self.ax1.set_title("Ch 37 " + title)
@@ -237,11 +245,13 @@ class BtleSniffer:
             self.ax3.set_ylabel("RSSI (dB)")
             self.ax3.plot(xs3, ys3, linewidth=1, marker=self.plotMarker)
 
+            # update the stats panel on the window using new data
             self.updateStats(window, ys1,ys2,ys3)
         
         # update the class var that holds all RSSI counters
         self.rssiCounts = rssiCounts
 
+    # calculate new stats and then post them to the screen widgets for display
     def updateStats(self, window, rssi1, rssi2, rssi3):
         if not rssi1 or not rssi2 or not rssi3:
             print("RSSI not received yet!")
@@ -303,6 +313,9 @@ class BtleSniffer:
         window["-Rng2-"].update(str(self._range2))
         window["-Rng3-"].update(str(self._range3))
 
+    # Create a list of addresses plus the associated RSSI count on each for 
+    # display in the UI ComboBox.  If the hideInfrequent flag is set then don't
+    # add those to the list.
     def getAddrList(self):
         addrs = list()
         for k, v in self.rssiCounts.items():
@@ -314,15 +327,20 @@ class BtleSniffer:
 
         return sorted(addrs)
 
-    def commandPrompt(self):
+    # This routine runs the loop that reads data from the UI window and then 
+    # performs the requested actions.
+    def mainUiLoop(self):
         print("Starting command prompt...\n")
 
         while self.runFlag == True:
+            # set the window theme
             sg.theme('Reddit')	# Add a touch of color
-            # All the stuff inside your window.
+            
+            # Get the figure dimensions for use in creating the GUI layout
             figX, figY, figW, figH = self.fig.bbox.bounds
 
-            #col1 = [  [sg.Canvas(size=(figW, figH), key="canvas")], 
+            # The UI widgets below the plot are arranged into two columns, col1 
+            # contains the UI controls and col2 contains the stats that are updated live.
             col1 = [ [sg.Text('RSSI Filter', font=("Courier", 10)), sg.Text('')],
                         [sg.Text('Select advertising addr: ', font=("Courier", 10)), 
                          sg.Combo(self.getAddrList(), auto_size_text=True, key="-ComboList-", font=("Courier",10))],
@@ -354,7 +372,14 @@ class BtleSniffer:
             # Event Loop to process "events" and get the "values" of the inputs
             done = False
             while not done:
+                # wait for user action, or timeout.  On timeout update the window.
                 event, values = window.read(timeout=500, timeout_key="-Timeout-")
+
+                # Exit - user clicked "x" in upper right corner
+                # Refresh Addr List - user clicked refresh button, so update the combobox
+                # OK - update display based on user input
+                # Timeout - allows for periodic screen updates/plot animation, or 
+                #           exiting when wireshark is killed
                 if event in (None, "Exit"):
                     print("Exiting window")
                     done = True
@@ -388,6 +413,8 @@ class BtleSniffer:
                     self.pausePlot = values["-PausePlot-"]
 
                 elif event in (None, "-Timeout-"):
+                    # check if the exit flag was set, if so exit this loop and quit.  
+                    # Otherwise, update the screen.
                     if self.runFlag == False:
                         print("runFlag set to False, exiting...")
                         done = True
@@ -399,7 +426,7 @@ class BtleSniffer:
 
             window.close()
 
-        print("Exiting commandPrompt")
+        print("Exiting mainUiLoop")
 
     # Spawn threads for capturing btle RSSI and other info
     def run(self):
@@ -410,8 +437,10 @@ class BtleSniffer:
 
         time.sleep(12)
         self.plotRSSI()
-        self.commandPrompt() 
+        self.mainUiLoop() 
 
+    # spawn all threads, then wait for wireshark thread to exit and set the 
+    # runFlag to false to cause other threads to quit.
     def spawnThreads(self):
         print("spawnThreads")
 
@@ -434,9 +463,6 @@ class BtleSniffer:
         self.t[1].join()
 
         self.runFlag = False
-        if self.ani != None:
-            if self.ani.event_source != None:
-                self.ani.event_source.stop()
 
     # Remotely run wireshark on the sniffer host, start capturing immediately on
     # the sniffer interface, and redirect its output to a file for reading.  This
@@ -515,7 +541,7 @@ class BtleSniffer:
                 print('RETURN CODE ', ret1, ', ', ret2)
                 break
 
-
+# print usage info
 def usage():
     print("\nDescription: this program uses the nRF52-DK with installed Bluetooth LE Sniffer firmware to capture and visualize live RSSI data.\n")
     print("\nUsage:\n")
@@ -526,6 +552,7 @@ def usage():
     print("     The filter address can be adjusted live by enter 'filter' into the command prompt")
     print("\n")
 
+# main function for command line entry point
 def main(argv):
     _filter = ""
 
@@ -550,5 +577,6 @@ def main(argv):
     sniffer.run()
     sniffer.wait()
 
+# callable from command line
 if __name__ == "__main__":
     main(sys.argv[1:])
