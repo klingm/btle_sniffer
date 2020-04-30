@@ -8,16 +8,12 @@ The program is executed on the computer running Linux, which connects to the Ras
 The user interface is shown below.
 ![btle_sniffer GUI](readme/gui.png)
 
+##Usage
+
+The Combo Box for the advertising address allows the user to filter the display on a specific Bluetooth MAC address.  The list of addresses can be updated using the "Refresh Addr List" button.  Selecting '\* \*' results in all data being displayed.  To make any changes take effect clock the OK button.
+
 The output file format is:
 
 Timestamp, Channel, Src Addr, Adv Addr, RSSI
-2020-04-30 08:30:51.759261,39,,6f:6f:59:05:ae:cb,-63
-2020-04-30 08:30:51.761690,37,,6f:6f:59:05:ae:cb,-68
-2020-04-30 08:30:51.763389,38,,6f:6f:59:05:ae:cb,-59
-2020-04-30 08:30:51.765033,39,,6f:6f:59:05:ae:cb,-61
-2020-04-30 08:30:51.766582,37,,6f:6f:59:05:ae:cb,-68
-2020-04-30 08:30:51.768263,38,,6f:6f:59:05:ae:cb,-59
-2020-04-30 08:30:51.770222,39,,6f:6f:59:05:ae:cb,-63
-2020-04-30 08:30:51.772612,37,,6f:6f:59:05:ae:cb,-68
-2020-04-30 08:30:51.774271,38,,6f:6f:59:05:ae:cb,-62
-2020-04-30 08:30:51.776190,39,,6f:6f:59:05:ae:cb,-59
+
+![btle_sniffer GUI](readme/tshark.out.png)
