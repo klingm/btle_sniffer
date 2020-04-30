@@ -5,8 +5,8 @@ function [T, fig, s37, s38, s39] = post_process_btle_sniffer_data(filename)
 %   T - Matlab table containing all data
 %   fig - the figure handle containing plots
 %   s37 - object containing stats for ch 37, index as 'min', 'max', etc.
-%   s37 - object containing stats for ch 38, index as 'min', 'max', etc.
-%   s37 - object containing stats for ch 39, index as 'min', 'max', etc.
+%   s38 - object containing stats for ch 38, index as 'min', 'max', etc.
+%   s39 - object containing stats for ch 39, index as 'min', 'max', etc.
 %
     
 % read csv data into table
