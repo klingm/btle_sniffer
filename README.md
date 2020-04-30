@@ -8,7 +8,7 @@ The program is executed on the computer running Linux, which connects to the Ras
 The user interface is shown below.
 ![btle_sniffer GUI](readme/gui.png)
 
-##Usage
+## Usage
 
 The Combo Box for the advertising address allows the user to filter the display on a specific Bluetooth MAC address.  The list of addresses can be updated using the "Refresh Addr List" button.  Selecting '\* \*' results in all data being displayed.  To make any changes take effect clock the OK button.
 
@@ -17,3 +17,12 @@ The output file format is:
 Timestamp, Channel, Src Addr, Adv Addr, RSSI
 
 ![btle_sniffer GUI](readme/tshark.out.png)
+
+## Matlab Script
+An additional Matlab script has been provided for reading in and processing the data in the output file.  The script creates a plot for each channel's RSSI and then calculates and prints the statistics for each dataset.  The script usage is shown below:
+
+![btle_sniffer GUI](readme/matlab_usage.png)
+
+![Matlab plot](readme/matlab_plot.png)
+
+![Matlab plot](readme/matlab_stats.png)
