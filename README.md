@@ -17,14 +17,14 @@ The btle_sniffer.py program generates three plots showing the measured RSSI on e
 
 The OVA file can be imported into VirtualBox and then run. In order to update the btle_sniffer repo on the VM to the latest run "git fetch --all" in the btle_sniffer folder from a terminal window.  This OVA image is preconfigured to work with this program and is set up for the nRF52-DK to both program it and use it; follow the instructions within the HOWTO file on the VM desktop to program the sniffer firmware on the nRF52-DK.  Everything else is already configured per the Nordic Semi guide.
 
-The program is executed on the computer running Linux, which connects to the RaspPi 4 and the BTLE sniffer using commands piped over ssh.  The BTLE sniffer from Nordic Semi does not work with tshark (only wireshark), so a capture is initiated to a local file on the RaspPi 4 that is the streamed to the local Linux computer and consumed by the btle_sniffer program.  The GUI is rendered using a TkAgg backend for the Matplotlib and PySimpleGUI libbraries.
+The program is executed on the computer running Linux, which connects to the RaspPi 4 and the BTLE sniffer using commands piped over ssh.  The BTLE sniffer from Nordic Semi does not work with tshark (only wireshark), so a capture is initiated to a local file on the RaspPi 4 that is the streamed to the local Linux computer and consumed by the btle_sniffer program.  The GUI is rendered using a TkAgg backend for the Matplotlib and PySimpleGUI libraries.
 
 The user interface is shown below.
 ![btle_sniffer GUI](readme/gui.png)
 
 ## Usage
 
-The Combo Box for the advertising address allows the user to filter the display on a specific Bluetooth MAC address.  The list of addresses can be updated using the "Refresh Addr List" button.  Selecting '\* \*' results in all data being displayed.  To make any changes take effect clock the OK button.
+The Combo Box for the advertising address allows the user to filter the display on a specific Bluetooth MAC address.  The list of addresses can be updated using the "Refresh Addr List" button.  Selecting '\* \*' results in all data being displayed.  To make any changes take effect click the OK button.
 
 The output file format is:
 
