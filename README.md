@@ -1,5 +1,7 @@
 # btle_sniffer
-This program requires a RaspPi 4 and a nRF52-DK with installed Bluetooth LE Sniffer (see Nordic Semi documentation) firmware to capture and visualize live Bluetooth LE RSSI data.  The image for use on the RaspPi 4 is available from the author.  
+This program requires a RaspPi 4 and a nRF52-DK with installed Bluetooth LE Sniffer (see Nordic Semi documentation) firmware to capture and visualize live Bluetooth LE RSSI data.  The image for use on the RaspPi 4 is available from the download link below.  
+
+[RaspPi 4 Ubuntu 18.04 BTLE Sniffer Image](https://drive.google.com/open?id=1eDnt5EfSa-9hmARvvnyXr8WYlHLQDVVJ)
 
 The btle_sniffer.py program generates three plots showing the measured RSSI on each of the available Bluetooth LE advertising channels (37, 38, 39).  Additionally, the stats for each channel are shown.  All data is saved in an output file in the same folder as the script as "tshark.out".  In order to run the program, a Linux installation with ssh client, wireshark/tshark, python3, pysimplegui, and matplotlib is required.  For convenience, the following OVA (Open Virtualization Framework) Ubuntu 18.04 VM can be downloaded and used.  It is fully configured with this software and the packages required to run it.
 
