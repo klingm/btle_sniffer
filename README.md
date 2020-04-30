@@ -15,7 +15,7 @@ The btle_sniffer.py program generates three plots showing the measured RSSI on e
 
 [Ubuntu 18.04 OVA Readme](https://drive.google.com/open?id=1KTFkCMhauD021Ow03gZeThJPVKwmc4OWUg1Dok6Tf40)
 
-In order to update the btle_sniffer repo on the VM to the latest run "git fetch --all" in the btle_sniffer folder.
+The OVA file can be imported into VirtualBox and then run. In order to update the btle_sniffer repo on the VM to the latest run "git fetch --all" in the btle_sniffer folder from a terminal window.
 
 The program is executed on the computer running Linux, which connects to the RaspPi 4 and the BTLE sniffer using commands piped over ssh.  The BTLE sniffer from Nordic Semi does not work with tshark (only wireshark), so a capture is initiated to a local file on the RaspPi 4 that is the streamed to the local Linux computer and consumed by the btle_sniffer program.  The GUI is rendered using a TkAgg backend for the Matplotlib and PySimpleGUI libbraries.
 
