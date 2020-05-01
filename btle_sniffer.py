@@ -25,6 +25,36 @@ import time
 
 matplotlib.use('TkAgg')
 
+# field indexes for BLTE data
+BTLE_TIME = 0
+BTLE_CH = 1
+BTLE_SCAN_ADDR = 2
+BTLE_ADV_ADDR = 3
+BTLE_RSSI = 4
+
+class BtleMetaData:
+    def __init__(self):
+        self.testEnv = ''
+        self.device = ''
+        self.range = ''
+        self.angle = ''
+        self.txPower = ''
+        self.gps = ''
+    
+    def makeOutputLine(self, name, val):
+        output = str(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f') + ',' + name + ',' + val.replace(',','.'))
+        return output + '\n'
+
+    def getOutput(self):
+        output = list()
+        output.append(self.makeOutputLine("Environment", self.testEnv))
+        output.append(self.makeOutputLine("Device", self.device))
+        output.append(self.makeOutputLine("Range", self.range))
+        output.append(self.makeOutputLine("Angle", self.angle))
+        output.append(self.makeOutputLine("TxPower", self.txPower))
+        output.append(self.makeOutputLine("GPS", self.gps))
+        return output
+    
 # Class that implements all BTLE sniffer functionality.  Create and update GUI,
 # send commands to RaspPi, receive data stream and process it.
 class BtleSniffer:
@@ -62,6 +92,8 @@ class BtleSniffer:
         self._mode = [0,0,0]
         self._std = [0,0,0]
         self._range = [0,0,0]
+
+        self.metaData = BtleMetaData()
 
         # call init function for RaspPi
         self.initPiSniffer()
@@ -113,6 +145,7 @@ class BtleSniffer:
         else:
             figureCanvasAgg = self.figCanvasAgg
         
+        pyplot.subplots_adjust(left=0.1)
         figureCanvasAgg.draw()
         figureCanvasAgg.get_tk_widget().pack(side='top', fill='both', expand=1)
 
@@ -165,13 +198,6 @@ class BtleSniffer:
         xs3 = []
         ys3 = []
 
-        # field indexes for BLTE data
-        BTLE_TIME = 0
-        BTLE_CH = 1
-        BTLE_SCAN_ADDR = 2
-        BTLE_ADV_ADDR = 3
-        BTLE_RSSI = 4
-
         # Plot title
         title = ""
         if self.filter == "":
@@ -198,7 +224,7 @@ class BtleSniffer:
                     # convert timestamp to seconds since start of capture
                     s = data[BTLE_TIME]
                     d = datetime.strptime(s, "%Y-%m-%d %H:%M:%S.%f")
-                    t = time.mktime(d.timetuple())
+                    t = time.mktime(d.timetuple()) + d.microsecond/1.0e6
                     
                     # get the first timestamp to use in calculating the display
                     # time (seconds since start of capture)
@@ -257,61 +283,61 @@ class BtleSniffer:
             print("RSSI not received yet!")
             return
 
-        self._min1 = min(rssi1) 
-        self._min2 = min(rssi2) 
-        self._min3 = min(rssi3) 
+        self._min[0] = min(rssi1) 
+        self._min[1] = min(rssi2) 
+        self._min[2] = min(rssi3) 
 
-        self._max1 = max(rssi1) 
-        self._max2 = max(rssi2) 
-        self._max3 = max(rssi3) 
+        self._max[0] = max(rssi1) 
+        self._max[1] = max(rssi2) 
+        self._max[2] = max(rssi3) 
 
-        self._mean1 = statistics.mean(rssi1) 
-        self._mean2 = statistics.mean(rssi2) 
-        self._mean3 = statistics.mean(rssi3) 
+        self._mean[0] = statistics.mean(rssi1) 
+        self._mean[1] = statistics.mean(rssi2) 
+        self._mean[2] = statistics.mean(rssi3) 
 
-        self._median1 = statistics.median(rssi1) 
-        self._median2 = statistics.median(rssi2) 
-        self._median3 = statistics.median(rssi3) 
+        self._median[0] = statistics.median(rssi1) 
+        self._median[1] = statistics.median(rssi2) 
+        self._median[2] = statistics.median(rssi3) 
 
-        self._mode1 = (max(set(rssi1), key=rssi1.count)) 
-        self._mode2 = (max(set(rssi2), key=rssi2.count)) 
-        self._mode3 = (max(set(rssi3), key=rssi3.count)) 
+        self._mode[0] = (max(set(rssi1), key=rssi1.count)) 
+        self._mode[1] = (max(set(rssi2), key=rssi2.count)) 
+        self._mode[2] = (max(set(rssi3), key=rssi3.count)) 
 
-        self._std1 = statistics.stdev(rssi1) 
-        self._std2 = statistics.stdev(rssi2) 
-        self._std3 = statistics.stdev(rssi3) 
+        self._std[0] = statistics.stdev(rssi1) 
+        self._std[1] = statistics.stdev(rssi2) 
+        self._std[2] = statistics.stdev(rssi3) 
 
-        self._range1 = self._max1 - self._min1 
-        self._range2 = self._max2 - self._min2 
-        self._range3 = self._max3 - self._min3 
+        self._range[0] = self._max[0] - self._min[0] 
+        self._range[1] = self._max[1] - self._min[1] 
+        self._range[2] = self._max[2] - self._min[2] 
 
-        window["-Min1-"].update(str(self._min1))
-        window["-Min2-"].update(str(self._min2))
-        window["-Min3-"].update(str(self._min3))
+        window["-Min1-"].update(str(self._min[0]))
+        window["-Min2-"].update(str(self._min[1]))
+        window["-Min3-"].update(str(self._min[2]))
 
-        window["-Max1-"].update(str(self._max1))
-        window["-Max2-"].update(str(self._max2))
-        window["-Max3-"].update(str(self._max3))
+        window["-Max1-"].update(str(self._max[0]))
+        window["-Max2-"].update(str(self._max[1]))
+        window["-Max3-"].update(str(self._max[2]))
 
-        window["-Mean1-"].update('{:3.6f}'.format(self._mean1))
-        window["-Mean2-"].update('{:3.6f}'.format(self._mean2))
-        window["-Mean3-"].update('{:3.6f}'.format(self._mean3))
+        window["-Mean1-"].update('{:3.6f}'.format(self._mean[0]))
+        window["-Mean2-"].update('{:3.6f}'.format(self._mean[1]))
+        window["-Mean3-"].update('{:3.6f}'.format(self._mean[2]))
 
-        window["-Median1-"].update(str(self._median1))
-        window["-Median2-"].update(str(self._median2))
-        window["-Median3-"].update(str(self._median3))
+        window["-Median1-"].update(str(self._median[0]))
+        window["-Median2-"].update(str(self._median[1]))
+        window["-Median3-"].update(str(self._median[2]))
 
-        window["-Mode1-"].update(str(self._mode1))
-        window["-Mode2-"].update(str(self._mode2))
-        window["-Mode3-"].update(str(self._mode3))
+        window["-Mode1-"].update(str(self._mode[0]))
+        window["-Mode2-"].update(str(self._mode[1]))
+        window["-Mode3-"].update(str(self._mode[2]))
 
-        window["-Std1-"].update('{:3.6f}'.format(self._std1))
-        window["-Std2-"].update('{:3.6f}'.format(self._std2))
-        window["-Std3-"].update('{:3.6f}'.format(self._std3))
+        window["-Std1-"].update('{:3.6f}'.format(self._std[0]))
+        window["-Std2-"].update('{:3.6f}'.format(self._std[1]))
+        window["-Std3-"].update('{:3.6f}'.format(self._std[2]))
 
-        window["-Rng1-"].update(str(self._range1))
-        window["-Rng2-"].update(str(self._range2))
-        window["-Rng3-"].update(str(self._range3))
+        window["-Rng1-"].update(str(self._range[0]))
+        window["-Rng2-"].update(str(self._range[1]))
+        window["-Rng3-"].update(str(self._range[2]))
 
     # Create a list of addresses plus the associated RSSI count on each for 
     # display in the UI ComboBox.  If the hideInfrequent flag is set then don't
@@ -380,6 +406,9 @@ class BtleSniffer:
                 # OK - update display based on user input
                 # Timeout - allows for periodic screen updates/plot animation, or 
                 #           exiting when wireshark is killed
+                if not self.runFlag:
+                    self.generateDataFile()
+                
                 if event in (None, "Exit"):
                     print("Exiting window")
                     done = True
@@ -461,7 +490,7 @@ class BtleSniffer:
         self.tsharkProcess[0].terminate()
         self.tsharkProcess[1].terminate()
         self.t[1].join()
-
+        
         self.runFlag = False
 
     # Remotely run wireshark on the sniffer host, start capturing immediately on
@@ -540,13 +569,150 @@ class BtleSniffer:
             if (ret1 is not None) and (ret2 is not None):
                 print('RETURN CODE ', ret1, ', ', ret2)
                 break
+    
+    def getMetadata(self):
+        # flag indicating when all metadata has been entered 
+        metaDataDone = False
+
+        # widgets on window layout
+        while not metaDataDone:
+            layout = [[sg.Text('Test Env'), sg.Input(key='-TestEnv-')],
+                      [sg.Text('Device  '), sg.Input(key='-Device-')],
+                      [sg.Text('Range   '), sg.Input(key='-Range-')],
+                      [sg.Text('Angle   '), sg.Input(key='-Angle-')],
+                      [sg.Text('Tx Power'), sg.Input(key='-TxPower-')],
+                      [sg.Text('GPS     '), sg.Input(key='-GPS-')],
+                      [sg.OK()] ]
+
+            # create the Window
+            window = sg.Window('Enter Capture Metadata', layout, force_toplevel=True)
+
+            # Force user to enter all fields
+            done = False
+            while not done:
+                # Wait for user input
+                event, values = window.read()
+
+                if event in (None, 'Exit'):
+                    done = True
+                    continue
+                elif event in (None, 'OK'):
+                    if len(values['-TestEnv-']) > 0:
+                        self.metaData.testEnv = values['-TestEnv-'].replace(',','.')
+                    else:
+                        sg.Popup('Invalid Test Env!')
+                        continue
+                    
+                    if len(values['-Device-']) > 0:
+                        self.metaData.device = values['-Device-'].replace(',','.')
+                    else:
+                        sg.Popup('Invalid Device!')
+                        continue
+
+                    if len(values['-Range-']) > 0:
+                        self.metaData.range = values['-Range-'].replace(',','.')
+                    else:
+                        sg.Popup('Invalid Range!')
+                        continue
+
+                    if len(values['-Angle-']) > 0:
+                        self.metaData.angle = values['-Angle-'].replace(',','.')
+                    else:
+                        sg.Popup('Invalid Angle!')
+                        continue
+
+                    if len(values['-TxPower-']) > 0:
+                        self.metaData.txPower = values['-TxPower-'].replace(',','.')
+                    else:
+                        sg.Popup('Invalid Tx Power!')
+                        continue
+
+                    if len(values['-GPS-']) > 0:
+                        self.metaData.gps = values['-GPS-'].replace(',','.')
+                    else:
+                        sg.Popup('Invalid GPS!')
+                        continue
+
+                    metaDataDone = True
+                    done = True
+
+    # This routine is called when the wireshark capture is terminated.  It 
+    # finalizes the data collection by generating a data file in the 
+    # recommended format using Metadata that the user is prompted for.  An
+    # image file containing the currently displayed plot is also generated.
+    # 
+    def generateDataFile(self):
+        # grab the metadata for this capture
+        self.getMetadata()
+
+        with open("btle_sniffer_" + datetime.now().strftime("%m-%d-%Y-%H%M%S.csv"), "w") as outFile, open("tshark.out", "r") as inFile:
+
+            for metadataLine in self.metaData.getOutput():
+                outFile.write(metadataLine)
+
+            # read all lines from the input file
+            inLines = inFile.readlines()
+
+            # iterate for all lines read to create a new output format
+            lineNum = -1 
+            for line in inLines:
+                lineNum = lineNum+1
+                # skip first and last lines, they are both garbage
+                if lineNum == 0:
+                    continue
+                elif lineNum == len(inLines)-1:
+                    continue
+                
+                # split line into fields
+                data = line.rstrip('\n').split(',')
+
+                if len(data) != 5:
+                    print("generateDataFile: unexpected line length, skipping!")
+                    continue
+
+                # create numeric time value from timestamp
+                s = data[BTLE_TIME]
+                d = datetime.strptime(s, "%Y-%m-%d %H:%M:%S.%f")
+                t = time.mktime(d.timetuple()) + d.microsecond/1.0e6
+
+                # create output in format required by MIT-LL
+                newLine = data[BTLE_TIME] + ',' +  \
+                          'Bluetooth' + ',' +  \
+                          str(data[BTLE_ADV_ADDR]) + ',' + \
+                          str(data[BTLE_RSSI]) + ',' + \
+                          str(self.metaData.txPower) + ',' + \
+                          str(t) + ',' + \
+                          str(data[BTLE_CH]) + '\n'
+
+                # write the output
+                outFile.write(newLine)
+
+            self.dumpStats(str('stats_' + os.path.basename(outFile.name)).replace('csv', 'txt'))
+
+    # dump calculated RSSI stats to a file
+    def dumpStats(self, fname):
+        with open(fname,"w") as statsFile:
+            for i in range(3):
+                if i == 0:
+                    statsFile.write('Ch 37 Stats:\n')
+                elif i == 1:
+                    statsFile.write('Ch 38 Stats:\n')
+                elif i == 2:
+                    statsFile.write('Ch 39 Stats:\n')
+                     
+                statsFile.write("min    = " + str(self._min[i]) + '\n') 
+                statsFile.write("max    = " + str(self._max[i]) + '\n') 
+                statsFile.write("mean   = " + str(self._mean[i]) + '\n') 
+                statsFile.write("median = " + str(self._median[i]) + '\n') 
+                statsFile.write("mode   = " + str(self._mode[i]) + '\n') 
+                statsFile.write("std    = " + str(self._std[i]) + '\n') 
+                statsFile.write("range  = " + str(self._range[i]) + '\n\n') 
 
 # print usage info
 def usage():
     print("\nDescription: this program uses the nRF52-DK with installed Bluetooth LE Sniffer firmware to capture and visualize live RSSI data.\n")
     print("\nUsage:\n")
-    print(" ",__file__, " [-vh] [-f filter_addr]\n")
-    print("     -v: verbose\n")
+    print(" ",__file__, " [-h] [-f filter_addr]\n")
     print("     -h: help\n")
     print("     -f filter_addr: display only bluetooth data with specified advertising address.")
     print("     The filter address can be adjusted live by enter 'filter' into the command prompt")
@@ -558,7 +724,7 @@ def main(argv):
 
     # grab command line args
     try:
-        opts, args = getopt.getopt(argv,"vhf:",["filter="])
+        opts, args = getopt.getopt(argv,"hf:",["filter="])
     except getopt.GetoptError:
         usage()
         return
@@ -570,8 +736,8 @@ def main(argv):
             return
         elif opt in ("-f", "--filter"):
             _filter = arg
-        elif opt == "-v":
-            verbose = True
+        #elif opt == "-v":
+        #    verbose = True
 
     sniffer = BtleSniffer(_filter)
     sniffer.run()
