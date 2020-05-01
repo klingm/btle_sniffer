@@ -190,7 +190,7 @@ class BtleSniffer:
     def animatePlot(self, i, window):
         # open the file containing data to plot and read.  Data is stored as 
         # CSV so split before using.
-        lines = open('tshark.out','r').readlines()
+        lines = open('btle_sniffer.out','r').readlines()
         xs1 = []
         ys1 = []
         xs2 = []
@@ -524,7 +524,7 @@ class BtleSniffer:
     # SSH is used to run the tail command to stream bytes from the capture file.
     # The output of this process is redirected to a pipe and then written to the 
     # input of a local instance of tshark running with stdin as its input vector.
-    # The tshark process stdout is redirected to the file tshark.out.
+    # The tshark process stdout is redirected to the file btle_sniffer.out.
     def runTshark(self):
 
         cmd1 =  ["ssh", "ubuntu@pi_sniffer", "tail", "-c +1", 
@@ -543,7 +543,7 @@ class BtleSniffer:
         self.tsharkProcess[0] = proc1
 
 
-        f = open("tshark.out", "w")
+        f = open("btle_sniffer.out", "w")
         proc2 = subprocess.Popen(cmd2, 
                            stdin=subprocess.PIPE,
                            stdout=f,
@@ -645,7 +645,7 @@ class BtleSniffer:
         # grab the metadata for this capture
         self.getMetadata()
 
-        with open("btle_sniffer_" + datetime.now().strftime("%m-%d-%Y-%H%M%S.csv"), "w") as outFile, open("tshark.out", "r") as inFile:
+        with open("btle_sniffer_" + datetime.now().strftime("%m-%d-%Y-%H%M%S.csv"), "w") as outFile, open("btle_sniffer.out", "r") as inFile:
 
             for metadataLine in self.metaData.getOutput():
                 outFile.write(metadataLine)
