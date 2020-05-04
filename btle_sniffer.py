@@ -31,6 +31,7 @@ BTLE_CH = 1
 BTLE_SCAN_ADDR = 2
 BTLE_ADV_ADDR = 3
 BTLE_RSSI = 4
+BTLE_TXPOWER = 5
 
 class BtleMetaData:
     def __init__(self):
@@ -220,7 +221,7 @@ class BtleSniffer:
 
             if len(line) > 1:
                 data = line.split(',')
-                if len(data) == 5:
+                if len(data) >= 5:
                     # convert timestamp to seconds since start of capture
                     s = data[BTLE_TIME]
                     d = datetime.strptime(s, "%Y-%m-%d %H:%M:%S.%f")
@@ -533,7 +534,7 @@ class BtleSniffer:
         cmd2 = ["tshark", "-r", "-", "-T", "fields", "-E", "separator=,", 
                 "-e", "_ws.col.Time", "-e", "nordic_ble.channel", 
                 "-e", "btle.scanning_address", "-e", "btle.advertising_address", 
-                "-e", "nordic_ble.rssi", "-t", "ad"]
+                "-e", "nordic_ble.rssi", "-e", "btcommon.eir_ad.entry.ips.tx_power_level", "-t", "ad"]
                 
 
         # open the process and save the process object as a class member variable
@@ -553,22 +554,25 @@ class BtleSniffer:
         # monitor the process and wait for exit
         ret1 = None
         ret2 = None
-        while True:
-            if ret1 is None:
-                binPcap = proc1.stdout.read(256)
-                ret1 = proc1.poll()
-            else:
-                binPcap = None
+        outFilename = 'buf.pcapng'
+        with open(outFilename, "wb") as outFile:
+            while True:
+                if ret1 is None:
+                    binPcap = proc1.stdout.read(256)
+                    ret1 = proc1.poll()
+                    outFile.write(binPcap)
+                else:
+                    binPcap = None
 
-            if ret2 is None:
-                if binPcap is not None:
-                    proc2.stdin.write(binPcap)
-                ret2 = proc2.poll()
-            
-            # wait for proc1  and proc2 to exit
-            if (ret1 is not None) and (ret2 is not None):
-                print('RETURN CODE ', ret1, ', ', ret2)
-                break
+                if ret2 is None:
+                    if binPcap is not None:
+                        proc2.stdin.write(binPcap)
+                    ret2 = proc2.poll()
+                
+                # wait for proc1  and proc2 to exit
+                if (ret1 is not None) and (ret2 is not None):
+                    print('RETURN CODE ', ret1, ', ', ret2)
+                    break
     
     def getMetadata(self):
         # flag indicating when all metadata has been entered 
@@ -666,7 +670,7 @@ class BtleSniffer:
                 # split line into fields
                 data = line.rstrip('\n').split(',')
 
-                if len(data) != 5:
+                if len(data) < 5:
                     print("generateDataFile: unexpected line length, skipping!")
                     continue
 
@@ -687,7 +691,11 @@ class BtleSniffer:
                 # write the output
                 outFile.write(newLine)
 
+            # create a file containing statistics
             self.dumpStats(str('stats_' + os.path.basename(outFile.name)).replace('csv', 'txt'))
+
+            # copy the pcapng file
+            os.rename('buf.pcapng', os.path.basename(outFile.name).replace('csv', 'pcapng'))
 
     # dump calculated RSSI stats to a file
     def dumpStats(self, fname):
