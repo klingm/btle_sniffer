@@ -84,6 +84,7 @@ class BtleSniffer:
         self.plotMarker = ""
         self.hideInfrequent = True
         self.infrequentThresh = 10
+        self.suppressNonNullScanAddr = True
 
         # stats
         self._min = [0,0,0]
@@ -226,6 +227,13 @@ class BtleSniffer:
                     crcOk = int(data[BTLE_CRCOK])
                     if not crcOk:
                         continue
+
+                    # check scan addr, only look at packets with NULL scan 
+                    # addr, others are phone to phone
+                    if self.suppressNonNullScanAddr:
+                        scanAddr = data[BTLE_SCAN_ADDR]
+                        if scanAddr != '':
+                            continue
 
                     # convert timestamp to seconds since start of capture
                     s = data[BTLE_TIME]
@@ -379,6 +387,7 @@ class BtleSniffer:
                         [sg.Checkbox("Don't show infrequent addrs", default=True, font=("Courier", 10), key="-Infrequent-")],
                         [sg.Checkbox("Show data points", default=False, font=("Courier", 10), key="-ShowDataPoints-")],
                         [sg.Checkbox("Pause plot updates", default=False, font=("Courier", 10), key="-PausePlot-")],
+                        [sg.Checkbox("Suppress BT Scans", default=True, font=("Courier", 10), key="-SuppressScans-")],
                         [sg.Button('OK'), sg.Button('Refresh Addr List')] ]
             
             col2 = [ [sg.Text('   Stats ', size=(10,1), font=("Courier",10)), sg.Text('Ch 37', size=(10,1), font=("Courier",10)), sg.Text('Ch 38', size=(10,1), font=("Courier",10)), sg.Text('Ch 39', size=(10,1), font=("Courier",10))],
@@ -446,6 +455,8 @@ class BtleSniffer:
                         self.plotMarker = ""
 
                     self.pausePlot = values["-PausePlot-"]
+
+                    self.suppressNonNullScanAddr = values['-SuppressScans-']
 
                 elif event in (None, "-Timeout-"):
                     # check if the exit flag was set, if so exit this loop and quit.  
