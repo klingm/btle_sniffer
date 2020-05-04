@@ -31,7 +31,7 @@ BTLE_CH = 1
 BTLE_SCAN_ADDR = 2
 BTLE_ADV_ADDR = 3
 BTLE_RSSI = 4
-BTLE_TXPOWER = 5
+BTLE_CRCOK = 5
 
 class BtleMetaData:
     def __init__(self):
@@ -221,7 +221,12 @@ class BtleSniffer:
 
             if len(line) > 1:
                 data = line.split(',')
-                if len(data) >= 5:
+                if len(data) >= 6:
+                    # check if the CRC is bad, if it is skip this packet
+                    crcOk = int(data[BTLE_CRCOK])
+                    if not crcOk:
+                        continue
+
                     # convert timestamp to seconds since start of capture
                     s = data[BTLE_TIME]
                     d = datetime.strptime(s, "%Y-%m-%d %H:%M:%S.%f")
@@ -534,7 +539,7 @@ class BtleSniffer:
         cmd2 = ["tshark", "-r", "-", "-T", "fields", "-E", "separator=,", 
                 "-e", "_ws.col.Time", "-e", "nordic_ble.channel", 
                 "-e", "btle.scanning_address", "-e", "btle.advertising_address", 
-                "-e", "nordic_ble.rssi", "-e", "btcommon.eir_ad.entry.ips.tx_power_level", "-t", "ad"]
+                "-e", "nordic_ble.rssi", "-e", "nordic_ble.crcok", "-t", "ad"]
                 
 
         # open the process and save the process object as a class member variable
@@ -670,8 +675,13 @@ class BtleSniffer:
                 # split line into fields
                 data = line.rstrip('\n').split(',')
 
-                if len(data) < 5:
+                if len(data) < 6:
                     print("generateDataFile: unexpected line length, skipping!")
+                    continue
+                
+                # make sure the CRC is ok, if not then throw this packet away
+                crcOk = int(data[BTLE_CRCOK])
+                if not crcOk:
                     continue
 
                 # create numeric time value from timestamp
