@@ -9,7 +9,7 @@ The RaspPi 4 4GB model can be purchased [here](https://www.digikey.com/product-d
 
 The nRF52-DK can be purchased [here](https://www.digikey.com/products/en?keywords=nrf52-dk)
 
-The btle_sniffer.py program generates three plots showing the measured RSSI on each of the available Bluetooth LE advertising channels (37, 38, 39).  Additionally, the stats for each channel are shown.  All data is saved in an output file in the same folder as the script as "btle_sniffer.out" (raw data file from tshark stream), "btle_sniffer_*.csv" (common MIT-LL Pact Data Format), and stats_btle*.txt (dump of dataset statistics).  In order to run the program, a Linux installation with ssh client, wireshark/tshark, python3, pysimplegui, and matplotlib is required.  For convenience, the following OVA (Open Virtualization Framework) Ubuntu 18.04 VM can be downloaded and used.  It is fully configured with this software and the packages required to run it.
+The btle_sniffer.py program generates three plots showing the measured RSSI on each of the available Bluetooth LE advertising channels (37, 38, 39).  Additionally, the stats for each channel are shown.  All data is saved in an output file in the same folder as the script as "btle_sniffer.out" (raw data file from tshark stream), "btle_sniffer_\*.csv" (common MIT-LL Pact Data Format), and stats_btle\*.txt (dump of dataset statistics).  In order to run the program, a Linux installation with ssh client, wireshark/tshark, python3, pysimplegui, and matplotlib is required.  For convenience, the following OVA (Open Virtualization Framework) Ubuntu 18.04 VM can be downloaded and used.  It is fully configured with this software and the packages required to run it.
 
 [Ubuntu 18.04 OVA File](https://drive.google.com/file/d/1dWmI-uXqkVM4jhfaz4iX1YwmndrMgIVz/view?usp=sharing)
 
@@ -26,11 +26,14 @@ The user interface is shown below.
 
 The Combo Box for the advertising address allows the user to filter the display on a specific Bluetooth MAC address.  The list of addresses can be updated using the "Refresh Addr List" button.  Selecting '\* \*' results in all data being displayed.  To make any changes take effect click the OK button.
 
-The output file format is:
+The raw streaming output file format is:
 
 Timestamp, Channel, Src Addr, Adv Addr, RSSI
 
-![btle_sniffer GUI](readme/tshark.out.png)
+![btle_sniffer.out](readme/tshark.out.png)
+
+The common data format file is shown below:
+![btle_sniffer_*.csv](readme/btle_sniffer_x.csv.png)
 
 ## Matlab Script
 An additional Matlab script has been provided for reading in and processing the data in the output file.  The script creates a plot for each channel's RSSI and then calculates and prints the statistics for each dataset.  The script usage is shown below:
