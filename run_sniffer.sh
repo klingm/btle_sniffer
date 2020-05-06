@@ -25,7 +25,9 @@ i=0
 while [ $i -lt $iterations ]
 do
     echo $i/$iterations
-    $py3 $script_path/btle_sniffer.py "$@"
+    #$py3 $script_path/btle_sniffer.py "$@"
     sleep 1
     i=`expr $i + 1`
+    echo "Hit enter to run next iteration"
+    read tmp
 done
