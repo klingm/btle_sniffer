@@ -35,13 +35,43 @@ BTLE_CRCOK = 5
 
 class BtleMetaData:
     def __init__(self):
+
         self.testEnv = ''
         self.device = ''
         self.range = ''
         self.angle = ''
         self.txPower = ''
         self.gps = ''
+        
+        self.getDefaults()
     
+    def getDefaults(self):
+        with open('defaults.txt','r') as defaultFile:
+            print("Reading default metadata...")
+            lines = defaultFile.readlines()
+
+            for line in lines:
+                line = line.rstrip()
+                val = line.split(',')
+                if len(val) != 2:
+                    print("Unexpected default value line!")
+                    continue
+                
+                if val[0] == "testEnv":
+                    self.testEnv = val[1]
+                if val[0] == "device":
+                    self.device= val[1]
+                if val[0] == "range":
+                    self.range = val[1]
+                if val[0] == "angle":
+                    self.angle = val[1]
+                if val[0] == "txPower":
+                    self.txPower = val[1]
+                if val[0] == "gps":
+                    self.gps = val[1]
+
+        return
+
     def makeOutputLine(self, name, val):
         output = str(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f') + ',' + name + ',' + val.replace(',','.'))
         return output + '\n'
@@ -596,12 +626,12 @@ class BtleSniffer:
 
         # widgets on window layout
         while not metaDataDone:
-            layout = [[sg.Text('Test Env'), sg.Input(key='-TestEnv-')],
-                      [sg.Text('Device  '), sg.Input(key='-Device-')],
-                      [sg.Text('Range   '), sg.Input(key='-Range-')],
-                      [sg.Text('Angle   '), sg.Input(key='-Angle-')],
-                      [sg.Text('Tx Power'), sg.Input(key='-TxPower-')],
-                      [sg.Text('GPS     '), sg.Input(key='-GPS-')],
+            layout = [[sg.Text('Test Env'), sg.Input(key='-TestEnv-', default_text=self.metaData.testEnv)],
+                      [sg.Text('Device  '), sg.Input(key='-Device-', default_text=self.metaData.device)],
+                      [sg.Text('Range   '), sg.Input(key='-Range-', default_text=self.metaData.range)],
+                      [sg.Text('Angle   '), sg.Input(key='-Angle-', default_text=self.metaData.angle)],
+                      [sg.Text('Tx Power'), sg.Input(key='-TxPower-', default_text=self.metaData.txPower)],
+                      [sg.Text('GPS     '), sg.Input(key='-GPS-', default_text=self.metaData.gps)],
                       [sg.OK()] ]
 
             # create the Window
@@ -753,7 +783,7 @@ def main(argv):
 
     # grab command line args
     try:
-        opts, args = getopt.getopt(argv,"hf:",["filter="])
+        opts, args = getopt.getopt(argv,"hf:i:",["filter=,iter="])
     except getopt.GetoptError:
         usage()
         return

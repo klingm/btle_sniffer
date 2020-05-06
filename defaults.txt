@@ -1,0 +1,6 @@
+testEnv,Anechoic Chamber w/ Positioner
+device,Samsung Galaxy S10 SMG973U1ZKAX
+range,6
+angle,0
+txPower,1
+gps,NA
