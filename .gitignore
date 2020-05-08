@@ -1,5 +1,5 @@
-btle*.out
+./btle*.out
 data/
-btle*.csv
-stats_btle*.txt
-*.pcapng
+./btle*.csv
+./stats_btle*.txt
+./*.pcapng
