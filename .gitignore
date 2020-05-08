@@ -3,3 +3,4 @@ data/
 ./btle*.csv
 ./stats_btle*.txt
 ./*.pcapng
+./*.*~
