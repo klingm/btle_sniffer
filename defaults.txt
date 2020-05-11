@@ -1,6 +1,6 @@
 testEnv,Anechoic Chamber w/ Positioner
-device,Samsung Galaxy S7
-range,6
+device,iPhone 11 MWKM2LL/A
+range,12
 angle,0
-txPower,1
+txPower,12
 gps,NA
