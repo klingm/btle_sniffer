@@ -1,7 +1,7 @@
-*.out
+/*.out
 data/
-btle*.csv
-stats_btle*.txt
-*.pcapng
-*.m~
-btle_sniffer.out
+/btle*.csv
+/stats_btle*.txt
+/*.pcapng
+/*.m~
+/btle_sniffer.out
