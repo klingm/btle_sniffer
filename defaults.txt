@@ -1,6 +1,6 @@
 testEnv,Anechoic Chamber w/ Positioner
-device,iPhone 11 MWKM2LL/A
+device,Samsung Galaxy S10 SMG973U1ZKAX
 range,12
 angle,0
-txPower,12
+txPower,1
 gps,NA
