@@ -1,0 +1,3 @@
+[submodule "EMCenter-Controller"]
+	path = EMCenter-Controller
+	url = https://github.com/klingm/EMCenter-Controller
