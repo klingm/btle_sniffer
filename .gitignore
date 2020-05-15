@@ -5,3 +5,4 @@ data/
 /*.pcapng
 /*.m~
 /btle_sniffer.out
+__pycache__/btle_sniffer.cpython-37.pyc

@@ -23,8 +23,6 @@ from matplotlib.backends.backend_tkagg import (NavigationToolbar2Tk as Navigatio
 from datetime import datetime
 import time
 
-from EMCenter_Controller import emcenter_ctrl
-
 matplotlib.use('TkAgg')
 
 # field indexes for BLTE data
@@ -47,6 +45,16 @@ class BtleMetaData:
         
         self.getDefaults()
     
+    def setDefaults(self):
+        with open('defaults.txt', 'w') as defaultFile:
+            print("Writing default metadata...")
+            defaultFile.write('testEnv,' + self.testEnv + '\n')
+            defaultFile.write('device,' + self.device + '\n')
+            defaultFile.write('range,' + self.range + '\n')
+            defaultFile.write('angle,' + self.angle + '\n')
+            defaultFile.write('txPower,' + self.txPower + '\n')
+            defaultFile.write('gps,' + self.gps + '\n')
+
     def getDefaults(self):
         with open('defaults.txt','r') as defaultFile:
             print("Reading default metadata...")
@@ -92,8 +100,10 @@ class BtleMetaData:
 # send commands to RaspPi, receive data stream and process it.
 class BtleSniffer:
     # Constructor, init all class vars and call init routine for the PiSniffer
-    def __init__(self, _filter = ""):
-        print("init")
+    def __init__(self, _filter = "", autoMode=False):
+        print("BtleSniffer init")
+        self.autoMode = autoMode
+
         self.mainProcess = None
         self.wiresharkProcess = None
         self.tsharkProcess = [None, None]
@@ -132,6 +142,10 @@ class BtleSniffer:
         # call init function for RaspPi
         self.initPiSniffer()
     
+    def __del__(self):
+        #print('BtleSniffer dtor')
+        pass
+
     # Generic routine to send a command to the RaspPi.  Only for use with 
     # commands that return and don'thang until killed.  This is used to send 
     # init commands.  Command is specified in _cmdStr arg.
@@ -168,6 +182,12 @@ class BtleSniffer:
             self.mainProcess.join()
         else:
             print("main process not running!")
+    
+    # Killing the wireshark process will force all other threads/subprocesses 
+    # to terminate.
+    def kill(self):
+        if self.wiresharkProcess != None:
+            self.wiresharkProcess.terminate()
 
     # Creates the master window used for holding the plot and the UI controls.
     def masterPlotWindow(self, canvas, figure, update=False):
@@ -193,14 +213,16 @@ class BtleSniffer:
             style.use('ggplot')
 
             # determine max size to make the figure
-            window = pyplot.get_current_fig_manager().window
-            yMax = window.winfo_screenheight()/100
-            xMax = window.winfo_screenwidth()/100
+            #window = pyplot.get_current_fig_manager().window
+            #yMax = window.winfo_screenheight()/100
+            #xMax = window.winfo_screenwidth()/100
 
-            if(xMax > 18.0):
-                xMax = 18.0
-            if(yMax > 7.5):
-                yMax = 7.5
+            #if(xMax > 18.0):
+            #    xMax = 18.0
+            #if(yMax > 7.5):
+            #    yMax = 7.5
+            xMax = 18.0
+            yMax = 7.5
 
             # generate the figure
             self.fig = pyplot.figure(figsize=(xMax, yMax))
@@ -626,6 +648,9 @@ class BtleSniffer:
         # flag indicating when all metadata has been entered 
         metaDataDone = False
 
+        if self.autoMode == True:
+            metaDataDone = True
+
         # widgets on window layout
         while not metaDataDone:
             layout = [[sg.Text('Test Env'), sg.Input(key='-TestEnv-', default_text=self.metaData.testEnv)],
@@ -800,7 +825,7 @@ def main(argv):
         #elif opt == "-v":
         #    verbose = True
 
-    sniffer = BtleSniffer(_filter)
+    sniffer = BtleSniffer(_filter=_filter)
     sniffer.run()
     sniffer.wait()
 
