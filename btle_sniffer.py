@@ -23,6 +23,8 @@ from matplotlib.backends.backend_tkagg import (NavigationToolbar2Tk as Navigatio
 from datetime import datetime
 import time
 
+from EMCenter_Controller import emcenter_ctrl
+
 matplotlib.use('TkAgg')
 
 # field indexes for BLTE data
