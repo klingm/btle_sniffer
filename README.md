@@ -28,7 +28,8 @@ The user interface is shown below.
 
 ## Usage
 
-The Combo Box for the advertising address allows the user to filter the display on a specific Bluetooth MAC address.  The list of addresses can be updated using the "Refresh Addr List" button.  Selecting '\* \*' results in all data being displayed.  To make any changes take effect click the OK button.
+The Combo Box for the advertising address allows the user to filter the display on a specific Bluetooth MAC address.  The list of addresses can be updated using the "Refresh Addr List" button.  Selecting '\* \*' results in all data being displayed.  To make any changes take effect click the OK button.  To end the capture and close all
+Windows, close the Wireshark capture window.  The program will then prompt for metadata associated with the capture and then exit.
 
 The raw streaming output file format is:
 
