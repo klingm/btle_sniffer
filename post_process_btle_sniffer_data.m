@@ -36,7 +36,11 @@ while ischar(tline)
         % This is an info field containing metadata
         metadata.gps = fields{3};
     elseif strcmp(fields{2},'Bluetooth')
-        % This is a data field
+        % extract data from cell array, handle both ver 1 and ver 2.  Ver 1 has
+        % 7 total fields and does not include the device name plus the TX TxPower
+        % is the anticipated power not the actual power.  Ver 2 has 8 fields and 
+        % contains the device name as well as the actual TX Power as reporred in
+        % each BLE packet.
         if length(fields) == 7
             btle.timestamp{btleCnt} = fields{1};
             btle.addr{btleCnt} = fields{3};
@@ -44,7 +48,18 @@ while ischar(tline)
             btle.txPower(btleCnt) = str2double(fields{5});
             btle.time(btleCnt) = str2double(fields{6});
             btle.chan(btleCnt) = str2double(fields{7});
+            btle.deviceName{btleCnt} = 'NA';
             btleCnt = btleCnt + 1;
+        elseif length(fields) == 8
+            btle.timestamp{btleCnt} = fields{1};
+            btle.addr{btleCnt} = fields{3};
+            btle.rssi(btleCnt) = str2double(fields{4});
+            btle.deviceName{btleCnt} = fields{5};
+            btle.time(btleCnt) = str2double(fields{6});
+            btle.txPower(btleCnt) = str2double(fields{7});
+            btle.chan(btleCnt) = str2double(fields{8});
+            btleCnt = btleCnt + 1;
+            
         else
             disp('Error, incorrect numer of fields in btle record!')
         end
@@ -58,6 +73,17 @@ fclose(fid);
 btle.rssiCh37=btle.rssi(btle.chan == 37);
 btle.rssiCh38=btle.rssi(btle.chan == 38);
 btle.rssiCh39=btle.rssi(btle.chan == 39);
+btle.timeCh37=btle.time(btle.chan == 37);
+btle.timeCh38=btle.time(btle.chan == 38);
+btle.timeCh39=btle.time(btle.chan == 39);
+
+% average each rssi in the 3-channel group
+for i=1:length(btle.rssiCh37)
+    if i <= length(btle.rssiCh38) && i <= length(btle.rssiCh39)
+        btle.avgRssi(i) = (btle.rssiCh37(i) + btle.rssiCh38(i) + btle.rssiCh39(i))/3;
+        btle.avgTime(i) = (btle.timeCh37(i))/3;
+    end
+end
 
 % generate plots
 fig = figure; 

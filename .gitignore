@@ -4,5 +4,9 @@ data/
 /stats_btle*.txt
 /*.pcapng
 /*.m~
-/btle_sniffer.out
-__pycache__/btle_sniffer.cpython-37.pyc
+/btle_sniffer.out.*
+test.py
+__pycache__/
+*.swp
+pact_data/nRF52/iPhone 11-2/Thumbs.db:encryptable
+pact_data/nRF52/iPhone 11-2/Thumbs.db
